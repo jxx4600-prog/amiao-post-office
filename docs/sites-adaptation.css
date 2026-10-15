@@ -1,3 +1,5 @@
 .local-storage-note{font:13px/1.7 sans-serif;opacity:.8;margin:10px 0 20px}.storage-banner{width:min(100% - 24px,420px);margin:0 auto 10px;text-align:center;font:12px/1.6 sans-serif;color:#71482e}.storage-banner button{text-decoration:underline;font:inherit;color:inherit;padding:6px}.backup-import{border:1px solid var(--ink);padding:10px;border-radius:4px;display:grid;gap:8px}.backup-import input{font:13px sans-serif;width:100%}.auth-actions button:focus-visible,.storage-banner button:focus-visible{outline:3px solid #bd7b3c;outline-offset:3px}
 
 .storage-banner{flex:none;width:100%;margin:0;padding:2px 10px;background:#f3ead2;border-bottom:1px solid #e5d7b9;font-size:11px;line-height:20px;min-height:28px}.storage-banner button{padding:2px 8px}.local-storage-note{font-family:sans-serif}body{height:100dvh;overflow:hidden}
+
+#app #view .home>img{content:url(assets/home-parts/roof.webp);height:6.639%;clip-path:none;object-fit:fill}

@@ -71,7 +71,7 @@
   ctx.textAlign='left';
  }
  document.addEventListener('input',e=>{if(e.target.closest('.paper')&&e.target.matches('textarea,input'))queue();if(e.target.id?.startsWith('layer-')){queue();if(e.target.id==='layer-font'){const p=$('.font-preview');if(p){p.style.fontFamily=window.miaoTypography.fonts[e.target.value];document.fonts.load(`22px ${p.style.fontFamily}`,p.textContent).then(queue);}}}});
- document.addEventListener('focusin',e=>{const f=e.target.closest('[data-text-layer]');if(f&&window.miaoLayers){window.miaoLayers.selectText(f.dataset.textLayer);f.classList.add('selected');}});
+ document.addEventListener('focusin',e=>{const f=e.target.closest('[data-text-layer]');if(f&&window.miaoLayers){document.querySelectorAll('.layer-box.selected').forEach(other=>{if(other!==f)other.classList.remove('selected');});window.miaoLayers.selectText(f.dataset.textLayer);f.classList.add('selected');}});
  document.addEventListener('keydown',e=>{const handle=e.target.closest('.layer-resize');if(!handle||!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();const frame=handle.closest('[data-text-layer]'),entry=modelFor(frame),box=entry.model[entry.key];box.w=Math.max(20,Math.min(100-box.x,box.w+(e.key==='ArrowLeft'?-1:1)*(e.shiftKey?5:1)));frame.style.width=box.w+'%';fit(frame);window.miao.save();});
  document.addEventListener('pointerup',e=>{if(window.miao?.page==='record'&&e.target.closest('.paper'))queue();});
  document.fonts.addEventListener('loadingdone',queue);
