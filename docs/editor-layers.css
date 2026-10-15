@@ -70,4 +70,7 @@
 .paper-length-controls{display:flex;justify-content:center;gap:8px;margin:8px 0 16px}.paper-length-controls .extend-paper{margin:0}
 .paper-scroll:has(.paper[data-format=postcard]) .paper-length-controls{display:none}
 .paper-scroll{scroll-behavior:auto}
-.paper[data-mode=select] .layer-box{touch-action:none}.paper[data-mode=select] textarea,.paper[data-mode=select] input{cursor:move;caret-color:transparent}
+.paper-scroll{touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.paper:not(.draw),.paper:not(.draw) .layer-box,.paper:not(.draw) textarea,.paper:not(.draw) input{touch-action:pan-y}
+.paper[data-mode=select] textarea,.paper[data-mode=select] input{cursor:move;caret-color:transparent}
+.paper .layer-move,.paper .layer-resize{touch-action:none}
