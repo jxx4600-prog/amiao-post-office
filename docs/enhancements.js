@@ -4,7 +4,7 @@
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icons={pen:'<path d="m4 20 4-1L20 7l-4-4L4 15Z M14 5l4 4"/>',music:'<path d="M9 18V5l12-2v13 M9 8l12-2"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',undo:'<path d="m8 3-5 5 5 5 M3 8h10a7 7 0 0 1 0 14"/>',redo:'<path d="m16 3 5 5-5 5 M21 8H11a7 7 0 0 0 0 14"/>',type:'<path d="M4 4h16 M12 4v17 M8 21h8"/>',stickers:'<path d="M20 13V4H4v16h9Z M13 20v-7h7"/>',image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="2"/><path d="m3 18 6-6 4 4 4-7 4 6"/>'};
  const svg=k=>window.miaoMotion.icon(({pen:'pencil',music:'music',undo:'undo-2',redo:'redo-2',type:'type',stickers:'sticker',image:'image'})[k]||k);
- let generation=0,pen=false,mode='铅笔',size=3,color='#7b4728',undo=[],redo=[],player=new Audio(),ambient=null,selected=null,ringUpload='',delivering=false;
+ let generation=0,pen=false,editorMode='select',mode='铅笔',size=3,color='#7b4728',undo=[],redo=[],player=new Audio(),ambient=null,selected=null,ringUpload='',delivering=false;
  const weatherArt=name=>window.miaoMotion.weatherArt(name);
  async function animateCat(canvas,file,ticket){
   const ctx=canvas.getContext('2d',{willReadFrequently:true});
@@ -40,7 +40,7 @@
   },{capture:true});
   const finish=e=>{if(active){e.stopImmediatePropagation();active=false;refreshCanvas();}};c.addEventListener('pointerup',finish,{capture:true});c.addEventListener('pointercancel',finish,{capture:true});
  }
- function setPen(on){pen=on;window.miaoLayers?.setMode(on?'draw':'text');$('.paper')?.classList.toggle('draw',on);$('#brush-controls').hidden=!on;document.querySelectorAll('[data-action=pen],[data-action=type]').forEach(b=>b.classList.toggle('active',(b.dataset.action==='pen')===on));}
+ function setPen(on,next='select'){pen=on;editorMode=on?'draw':next;window.miaoLayers?.setMode(editorMode);$('.paper')?.classList.toggle('draw',on);$('#brush-controls').hidden=!on;document.querySelectorAll('[data-action=pen],[data-action=type]').forEach(b=>{const active=b.dataset.action==='pen'?on:editorMode==='text';b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});if(editorMode!=='text'&&$('.paper')?.contains(document.activeElement))document.activeElement.blur();}
  function scene(l){const courier=l.courier||(api().page==='delivery'?api().courier:''),profile=window.miaoCouriers.profiles[courier];return `<div class="letter-preview" data-courier="${esc(courier)}"><div class="letter-scene" data-courier="${esc(courier)}" data-template="${esc(l.template||'lines')}" style="aspect-ratio:${Number(l.paperRatio)||.67};${l.template==='plain'?'background-color:var(--paper)':''}">${profile?`<span class="stationery-mark" aria-hidden="true">${window.miaoMotion.icon(profile.motif)}</span>`:''}<p>${esc(l.text)}</p>${l.drawing?`<img class="ink-layer" src="${esc(l.drawing)}" alt="涂鸦">`:''}${(l.stickers||[]).map(s=>`<img class="saved-sticker" src="${esc(s.src)}" alt="贴纸" style="left:${s.x}%;top:${s.y}%;width:${s.w||28}%;transform:rotate(${Number(s.rotation)||0}deg)">`).join('')}${profile?`<span class="stationery-stamp"><img src="assets/${esc(courier)}.png" alt="">${esc(courier)}已送达</span>`:''}</div><small class="letter-weather">${weatherArt(l.weather||api().state.weather)}${esc(l.date)} · ${esc(l.weather||api().state.weather)}</small>${l.comment?`<aside class="cat-comment"><img src="assets/${esc(courier)}.png" alt="${esc(courier)}"><p>${esc(l.comment)}</p></aside>`:''}</div>`;}
  function music(){api().open(`<h2>咪的音乐角</h2><div class="music-controls"><label>上传音乐<input id="music-upload" type="file" accept="audio/*"></label><p id="track-name">${esc(selected?.name||'尚未选择音乐')}</p><audio id="music-player" controls ${selected?`src="${esc(selected.src)}"`:''}></audio><label>音量<input id="music-volume" type="range" min="0" max="1" step=".05" value="${player.volume}"></label><label style="display:flex;align-items:center"><input id="music-loop" type="checkbox" style="width:20px" ${player.loop?'checked':''}>循环播放</label><div class="music-actions"><button data-ambience="rain">雨声</button><button data-ambience="stop">停止雨声</button></div></div>`);const el=$('#music-player');el.currentTime=player.currentTime;el.volume=player.volume;el.loop=player.loop;el.onplay=()=>{player.pause();};el.onpause=()=>{};}
  function stopAmbient(){if(ambient){ambient.close();ambient=null;}}
@@ -58,6 +58,7 @@
    $('.record-date').insertAdjacentHTML('beforebegin',`<div class="brush-controls" id="brush-controls" hidden><select id="brush-mode" aria-label="画笔">${['蜡笔','铅笔','钢笔','马克笔'].map(m=>`<option ${m===mode?'selected':''}>${m}</option>`).join('')}</select><input id="brush-size" title="画笔或橡皮粗细" aria-label="画笔粗细" type="range" min="1" max="12" value="${size}"><input id="brush-color" aria-label="画笔颜色" type="color" value="${color}"><button data-action="eraser" class="eraser-tool ${mode==='橡皮'?'active':''}" title="橡皮" aria-label="橡皮">${svg('eraser')}</button></div><div class="paper-controls" role="group" aria-label="信纸选择"><strong>信纸</strong>${[['lines','横线'],['plain','留白'],['dot','点阵']].map(([id,name])=>`<button data-paper="${id}" aria-pressed="${(s.draft.template||'lines')===id}"><span class="paper-swatch ${id}" aria-hidden="true"></span>${name}</button>`).join('')}</div>`);
    $('.record-date span').innerHTML=`<button data-action="weather" title="心情天气">${esc(s.draft.weather||s.weather)} ▾</button>`;$('.paper').dataset.template=s.draft.template||'lines';brush();stickers();
   }
+  if(detail.page==='record')setPen(editorMode==='draw',editorMode);
   if(detail.page==='delivery'){$('.letter-preview').outerHTML=scene(s.draft);window.miaoMotion.courierChoice();}
  });
  document.addEventListener('click',e=>{
@@ -70,7 +71,7 @@
   else if(action==='pen')setPen(!pen);
   else if(action==='eraser'){mode=mode==='橡皮'?$('#brush-mode').value:'橡皮';b.classList.toggle('active',mode==='橡皮');}
   else if(b.dataset.paper){api().state.draft.template=b.dataset.paper;$('.paper').dataset.template=b.dataset.paper;document.querySelectorAll('[data-paper]').forEach(el=>el.setAttribute('aria-pressed',el===b?'true':'false'));api().save();}
-  else if(action==='type')setPen(false);
+  else if(action==='type')setPen(false,editorMode==='text'?'select':'text');
   else if(action==='undo'||action==='redo'){const from=action==='undo'?undo:redo,to=action==='undo'?redo:undo;if(from.length){to.push($('#canvas').toDataURL());restore(from.pop());}}
   else if(action==='music')music();
   else if(b.dataset.ambience){b.dataset.ambience==='rain'?rain():stopAmbient();}
@@ -84,7 +85,7 @@
   else if(action==='deliver'){
    const a=api(),s=a.state;if(delivering||!a.courier)return;if(!s.draft.text.trim()&&!(s.draft.textBlocks||[]).some(b=>b.text?.trim())&&!s.draft.stickers.length&&!s.draft.drawing){a.toast('先写一点今天的故事吧');return;}delivering=true;
    $('#view').inert=true;$('#app').insertAdjacentHTML('beforeend','<div class="delivery-loading" role="status" aria-label="信件正在投递"><div class="loading-heads"><img src="assets/白白.png" alt="白白"><img src="assets/莉莉.png" alt="莉莉"><img src="assets/阿夜.png" alt="阿夜"></div><p class="loading-copy">猫猫正在投递中</p><div class="loading-stripe"></div></div>');
-   setTimeout(()=>{const l={...structuredClone(s.draft),weather:s.draft.weather||s.weather,courier:a.courier,id:crypto.randomUUID()};delete l.editing;l.comment=window.miaoCouriers.comment(l);delivering=false;$('.delivery-loading').remove();$('#view').inert=false;window.miaoJournal.confirm(l);},1500);
+   setTimeout(()=>{const l={...structuredClone(s.draft),weather:s.draft.weather||s.weather,courier:a.courier,id:crypto.randomUUID()};delete l.editing;l.comment=window.miaoCouriers.comment(l);const nickname=window.miaoPeople.profile(s,window.miaoAuth?.user).nickname;if(nickname)l.comment=nickname+'，'+l.comment;delivering=false;$('.delivery-loading').remove();$('#view').inert=false;window.miaoJournal.confirm(l);},1500);
   }else handled=false;
   if(handled){e.preventDefault();e.stopImmediatePropagation();}
  },true);

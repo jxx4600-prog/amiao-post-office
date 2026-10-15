@@ -2,7 +2,7 @@
  'use strict';
  const config=window.miaoAuthConfig,$=s=>document.querySelector(s);
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let client=null,user=null,problem='',initialized=false,switching=false;
+ let client=null,user=null,problem='',initialized=false,switching=false,onboardingShown=false;
  const cooldownKey='miao-auth-mail-sent-v1';
  const suffix=id=>id&&/^[a-f0-9-]{36}$/i.test(id)?':user:'+id:'';
  function cleanCallback(){
@@ -21,13 +21,19 @@
  }
  function accountRow(){
   if(!window.miao||window.miao.page!=='mine')return;
+  const details=window.miaoPeople.profile(window.miao.state,user);
   $('.account-row')?.remove();
-  $('.page .content')?.insertAdjacentHTML('afterbegin',`<div class="account-row"><div><strong>${user?'我的账号':'访客'}</strong><small>${user?escape(user.email):'记录保存在当前浏览器'}</small></div><button data-auth="open">${user?'账号':'登录'}</button></div>`);
+  $('.page .content')?.insertAdjacentHTML('afterbegin',`<div class="account-row"><div><strong>${escape(details.nickname)||(user?'我的账号':'访客')}</strong><small>${user?escape(user.email):'记录保存在当前浏览器'}</small></div><button data-auth="open">${user?'账号':'登录'}</button></div>`);
+  if(user&&(!details.nickname||!details.birthday)&&!onboardingShown&&!$('#modal[open]')){onboardingShown=true;openProfile();}
+ }
+ function openProfile(){
+  const details=window.miaoPeople.profile(window.miao.state,user),today=window.miaoClock.read(new Date(),'Asia/Shanghai').date;
+  window.miao.open(`<h2>${details.nickname?'我的资料':'让猫猫认识你'}</h2><form id="auth-profile-form"><label>昵称<input name="nickname" autocomplete="nickname" maxlength="40" value="${escape(details.nickname)}" required></label><label>生日<input name="birthday" type="date" max="${today}" value="${escape(details.birthday)}" required></label><button class="primary" type="submit">保存资料</button></form><p class="auth-note">${user?'资料会保存到你的 Supabase 账号，用于猫猫称呼和生日来信。':'资料仅保存在当前浏览器，用于猫猫称呼和生日来信。'}</p><p id="auth-status" role="status" aria-live="polite"></p>`);
  }
  function openAccount(){
   window.miao.snapshot();
   if(user){
-   window.miao.open(`<h2>我的账号</h2><div class="account-profile"><img src="assets/白白.png" alt=""><strong>${escape(user.email)}</strong></div><p class="auth-note">当前记录保存在此浏览器，暂不跨设备同步。</p><div class="auth-actions"><button data-auth="export">备份当前记录</button><button data-auth="logout">退出登录</button></div><p id="auth-status" role="status" aria-live="polite"></p>`);
+   window.miao.open(`<h2>我的账号</h2><div class="account-profile"><img src="assets/白白.png" alt=""><strong>${escape(user.email)}</strong></div><p class="auth-note">当前记录保存在此浏览器，暂不跨设备同步。</p><div class="auth-actions"><button data-auth="profile">昵称与生日</button><button data-auth="export">备份当前记录</button><button data-auth="logout">退出登录</button></div><p id="auth-status" role="status" aria-live="polite"></p>`);
    return;
   }
   window.miao.open(`<h2>登录阿喵事务局</h2><form id="auth-email-form"><label>邮箱<input type="email" name="email" autocomplete="email" placeholder="name@example.com" required maxlength="254"></label><button class="primary" type="submit" ${client?'':'disabled'}>发送登录链接</button></form><p class="auth-note">邮箱将发送给 Supabase 用于身份验证。首次验证后创建账号；请在当前浏览器打开邮件中的链接。</p><p class="auth-note">访客记录保留在此浏览器，登录后单独保存，暂不跨设备同步。</p><p id="auth-status" role="status" aria-live="polite">${escape(problem)}</p>`);
@@ -61,6 +67,16 @@
   initialized=true;
  }
  document.addEventListener('submit',async e=>{
+  if(e.target.id==='auth-profile-form'){
+   e.preventDefault();e.stopImmediatePropagation();const form=e.target,button=form.querySelector('button'),data=new FormData(form),nickname=window.miaoPeople.nickname(data.get('nickname')),birthday=window.miaoPeople.birthday(data.get('birthday'));
+   if(!nickname||!birthday){status('请填写昵称和有效生日，生日不能晚于今天。');return;}
+   button.disabled=true;status('正在保存…');
+   try{
+    if(user){const {data:result,error}=await client.auth.updateUser({data:{nickname,birthday}});if(error)throw error;user=result.user;}
+    window.miao.state.profile={nickname,birthday};window.miao.state.birthday=birthday;window.miao.save();$('#modal').close();window.miao.render();window.miaoPostbox?.check();window.miao.toast('资料已保存');
+   }catch(error){status('资料未能保存，请检查网络后重试。');button.disabled=false;}
+   return;
+  }
   if(e.target.id!=='auth-email-form')return;
   e.preventDefault();e.stopImmediatePropagation();
   const form=e.target,button=form.querySelector('button'),email=new FormData(form).get('email')?.trim();
@@ -81,6 +97,7 @@
   const button=e.target.closest('[data-auth]');if(!button||!window.miao)return;
   e.preventDefault();e.stopImmediatePropagation();
   if(button.dataset.auth==='open'){openAccount();return;}
+  if(button.dataset.auth==='profile'){openProfile();return;}
   if(button.dataset.auth==='export'){
    window.miao.snapshot();const blob=new Blob([JSON.stringify({format:'amiao-backup-v1',savedAt:new Date().toISOString(),data:window.miao.state})],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='amiao-records.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return;
   }
@@ -91,6 +108,6 @@
   }
  },true);
  window.addEventListener('miao:render',({detail})=>{if(detail.page==='mine')queueMicrotask(accountRow);});
- window.miaoAuth={ready:null,get user(){return user},get storageSuffix(){return suffix(user?.id)},suffix,friendly};
+ window.miaoAuth={ready:null,get user(){return user},get storageSuffix(){return suffix(user?.id)},suffix,friendly,openProfile};
  window.miaoAuth.ready=initialize().then(()=>{if(problem)setTimeout(()=>window.miao?.toast(problem),1000);});
 })();
