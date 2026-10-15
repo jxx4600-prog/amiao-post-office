@@ -11,7 +11,7 @@ const js=(await Promise.all(jsFiles.map(f=>readFile(path.join(root,f),'utf8'))))
 const styles=esbuild?await esbuild.transform(css,{loader:'css',minify:true}):{code:css};
 const scripts=esbuild?await esbuild.transform(js,{loader:'js',minify:true,target:['es2020']}):{code:js};
 await writeFile(path.join(root,'site.css'),styles.code);await writeFile(path.join(root,'site.js'),scripts.code);
-let first=true;html=html.replace(/<link rel="stylesheet" href="[^"]*">/g,()=>{if(!first)return '';first=false;return '<link rel="stylesheet" href="site.css?v=20261015-4">';});
-first=true;html=html.replace(/<script defer src="[^"]*"><\/script>/g,()=>{if(!first)return '';first=false;return '<script defer src="site.js?v=20261015-4"></script>';});
+let first=true;html=html.replace(/<link rel="stylesheet" href="[^"]*">/g,()=>{if(!first)return '';first=false;return '<link rel="stylesheet" href="site.css?v=20261015-5">';});
+first=true;html=html.replace(/<script defer src="[^"]*"><\/script>/g,()=>{if(!first)return '';first=false;return '<script defer src="site.js?v=20261015-5"></script>';});
 await writeFile(path.join(root,'index.html'),html);
 console.log(JSON.stringify({stylesheetsBefore:cssFiles.length,scriptsBefore:jsFiles.length,stylesheetsAfter:1,scriptsAfter:1,cssBytes:Buffer.byteLength(styles.code),jsBytes:Buffer.byteLength(scripts.code)}));

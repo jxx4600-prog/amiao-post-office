@@ -1,4 +1,15 @@
 (() => {
+ // Mobile webviews can keep 100vh/dvh at the layout viewport after their
+ // toolbar or keyboard changes. Size the app to the visible viewport instead.
+ const viewport=window.visualViewport;
+ function fitViewport(){
+  if(viewport&&Math.abs(viewport.scale-1)>.05)return;
+  document.documentElement.style.setProperty('--app-height',Math.round(viewport?.height||window.innerHeight)+'px');
+ }
+ window.addEventListener('resize',fitViewport);
+ window.addEventListener('pageshow',fitViewport);
+ viewport?.addEventListener('resize',fitViewport);
+ fitViewport();
  let observer=null;
  window.addEventListener('miao:render',({detail})=>{
   observer?.disconnect();if(detail.page!=='home')return;

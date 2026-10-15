@@ -73,4 +73,10 @@ dialog[open],.letter{animation:none!important;opacity:1}
 @media(hover:hover) and (pointer:fine){#app,#app button,#modal,#modal button{cursor:url('assets/paw-cursor.svg') 8 8,pointer}#app .paper.draw{cursor:url('assets/paw-cursor.svg') 8 8,crosshair}}
 @media(prefers-reduced-motion:reduce){.tap-paw{animation:none;opacity:.6}}
 
-#app #view .home-cat .courier-puppet,#app #view .cat{transform:translateY(var(--cat-align-y,0px))}
+/* Calendar art is square: 68% top + 24cqw * .836 + 3px caption gap.
+   Both visible bottoms use this same anchor, including before frames load. */
+#app #view .home{--cat-floor:calc(32% - 20.064cqw - 15px)}
+#app #view .todo-caption{top:calc(68% + 20.064cqw + 3px);left:66%;width:24%;height:15px;min-height:0;line-height:15px}
+#app #view .home-cat,#app #view .cat{top:auto;bottom:var(--cat-floor);height:45%;transform:none}
+#app #view .home-cat{padding-bottom:0}
+#app #view .home-cat .courier-puppet{transform:none}
