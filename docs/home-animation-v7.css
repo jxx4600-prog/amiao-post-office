@@ -52,8 +52,8 @@
 @media(max-height:670px){#app #view .home-cat{top:37%;height:43%}#app #view .home-cat .courier-puppet{height:min(100%,220px,56cqw);width:auto}}
 .tap-paw{position:fixed;z-index:1000;width:27px;height:27px;color:#9b6c49;pointer-events:none;transform:translate(-50%,-50%);animation:tap-paw-fade .26s ease-out both}
 .tap-paw svg{width:100%;height:100%}
-@font-face{font-family:MiaoRound;src:local('Microsoft YaHei');unicode-range:U+65F6;font-weight:400}
-@font-face{font-family:MiaoRound;src:local('Microsoft YaHei Bold'),local('Microsoft YaHei');unicode-range:U+65F6;font-weight:700 900}
+
+
 #task-reminder{width:min(390px,calc(100% - 32px));border:1px solid #bba689;border-radius:6px;background:var(--paper);color:var(--ink);padding:24px;font-family:MiaoLatin,MiaoRound,sans-serif}
 #task-reminder::backdrop{background:#51443266}
 #task-reminder h2{font-size:18px;display:flex;align-items:center;gap:8px;margin-top:8px}
@@ -72,3 +72,5 @@ dialog[open],.letter{animation:none!important;opacity:1}
 @keyframes tap-paw-fade{0%{opacity:.8;transform:translate(-50%,-50%) scale(.75)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
 @media(hover:hover) and (pointer:fine){#app,#app button,#modal,#modal button{cursor:url('assets/paw-cursor.svg') 8 8,pointer}#app .paper.draw{cursor:url('assets/paw-cursor.svg') 8 8,crosshair}}
 @media(prefers-reduced-motion:reduce){.tap-paw{animation:none;opacity:.6}}
+
+#app #view .home-cat .courier-puppet,#app #view .cat{transform:translateY(var(--cat-align-y,0px))}

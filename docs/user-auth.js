@@ -33,10 +33,10 @@
  function openAccount(){
   window.miao.snapshot();
   if(user){
-   window.miao.open(`<h2>我的账号</h2><div class="account-profile"><img src="assets/白白.png" alt=""><strong>${escape(user.email)}</strong></div><p class="auth-note">当前记录保存在此浏览器，暂不跨设备同步。</p><div class="auth-actions"><button data-auth="profile">昵称与生日</button><button data-auth="export">备份当前记录</button><button data-auth="logout">退出登录</button></div><p id="auth-status" role="status" aria-live="polite"></p>`);
+   window.miao.open(`<h2>我的账号</h2><div class="account-profile"><img src="assets/白白.png" alt=""><strong>${escape(user.email)}</strong></div><p class="auth-note">账号记录通过 Supabase 保存；请以同步状态为准。离线或保存失败时，修改暂存当前浏览器。<br><strong data-cloud-status>${escape(window.miaoCloud?.status||'正在检查账号记录')}</strong><button data-cloud="inspect">检查账号记录 / 重试保存</button><button data-cloud="import-guest">导入此浏览器访客记录</button></p><div class="auth-actions"><button data-auth="profile">昵称与生日</button><button data-auth="export">备份当前记录</button><button data-auth="logout">退出登录</button></div><p id="auth-status" role="status" aria-live="polite"></p>`);
    return;
   }
-  window.miao.open(`<h2>登录阿喵事务局</h2><form id="auth-email-form"><label>邮箱<input type="email" name="email" autocomplete="email" placeholder="name@example.com" required maxlength="254"></label><button class="primary" type="submit" ${client?'':'disabled'}>发送登录链接</button></form><p class="auth-note">邮箱将发送给 Supabase 用于身份验证。首次验证后创建账号；请在当前浏览器打开邮件中的链接。</p><p class="auth-note">访客记录保留在此浏览器，登录后单独保存，暂不跨设备同步。</p><p id="auth-status" role="status" aria-live="polite">${escape(problem)}</p>`);
+  window.miao.open(`<h2>登录阿喵事务局</h2><form id="auth-email-form"><label>邮箱<input type="email" name="email" autocomplete="email" placeholder="name@example.com" required maxlength="254"></label><button class="primary" type="submit" ${client?'':'disabled'}>发送登录链接</button></form><p class="auth-note">邮箱将发送给 Supabase 用于身份验证。首次验证后创建账号；请在当前浏览器打开邮件中的链接。</p><p class="auth-note">访客记录只保存在当前浏览器。登录后读取账号记录，访客内容可在账号面板中手动导入。</p><p id="auth-status" role="status" aria-live="polite">${escape(problem)}</p>`);
  }
  function reloadAccount(){
   if(switching)return;switching=true;
@@ -108,6 +108,6 @@
   }
  },true);
  window.addEventListener('miao:render',({detail})=>{if(detail.page==='mine')queueMicrotask(accountRow);});
- window.miaoAuth={ready:null,get user(){return user},get storageSuffix(){return suffix(user?.id)},suffix,friendly,openProfile};
+ window.miaoAuth={ready:null,get user(){return user},get storageSuffix(){return suffix(user?.id)},suffix,friendly,openProfile,openAccount,get client(){return client}};
  window.miaoAuth.ready=initialize().then(()=>{if(problem)setTimeout(()=>window.miao?.toast(problem),1000);});
 })();

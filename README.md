@@ -1,1 +1,31 @@
-# amiao-post-office
+# 阿喵事务局
+
+网页：https://jxx4600-prog.github.io/amiao-post-office/
+
+GitHub Pages 从 `main` 分支的 `docs/` 发布。所有访客均可打开网页；应用账号使用 Supabase 邮箱一次性链接，站点不受 Sites 的所有者访问权限限制。
+
+## 保存方式
+
+访客数据只保存在当前浏览器。邮箱验证登录后，网页读取该账号的 Supabase 记录，并保留账号专属的浏览器缓存。修改会延迟约 1.2 秒提交；只有服务器确认成功才显示“已保存到账号”。离线或失败时显示待重试，跨设备版本发生冲突时要求用户选择，不静默覆盖。
+
+“账号与备份”可导出 JSON、手动导入本浏览器的访客记录、检查账号记录/重试保存。访客内容不会自动上传到新账号。退出前请检查保存状态；图片较多时请保留本地备份。云端单次记录上限为 8 MB，浏览器本地存储上限由浏览器决定。
+
+账号存储依赖 `supabase/migrations/20261015_account_records.sql`：记录以 `auth.uid()` 隔离，匿名用户不能读写，登录用户不能读取其他账号。保存函数执行版本检查，拒绝旧设备覆盖新版本。`supabase/tests/account_isolation.sql` 用于真实数据库验证，所有测试写入在事务结束时回滚。
+
+前端仅包含 Publishable key；不提交 service_role、数据库密码、管理令牌、用户记录或登录链接。邮箱确认保持启用。面向任意外部邮箱开放注册前，需要在 Supabase 配好自有 SMTP；默认邮件服务可能限制收件邮箱和发送次数。
+
+## 记录编辑
+
+- 标题默认 28px，正文默认 19px；标题可独立更改字体和大小。
+- 文本框高度随内容和宽度自动调整，增加文字会增高，删字后会收回。侧边圆点可拖动调宽，也支持左右方向键，Shift 可加大步长。
+- 文字、标题、图片、贴纸、形状、涂鸦按创建顺序叠放；选择图层不改变顺序。预览及图片导出使用同一顺序。
+- 新增站酷快乐体、站酷小薇体、龙藏手书、Caveat、Pacifico、Dancing Script。字体自托管并按字形子集加载，不依赖访问外部字体服务。英文花字中的中文使用圆体回退。授权保存在 `docs/vendor/font-licenses/`。
+- 首页猫咪可见底端与日历英文底端对齐。保留原有手绘素材、动画、心情、日记、投递、信箱、闹钟、待办和未来信。
+
+## 维护与验证
+
+编辑 `docs/` 下的独立 JS/CSS 后，执行 `node bundle.mjs` 生成发布入口。无需安装依赖即可合并；环境中有 esbuild 时同时压缩。执行 `node preview.mjs` 启动本机预览。
+
+执行 `node tests/cloud-sync.test.mjs` 检查登录读取、保存确认、版本冲突和离线保留。部署和真实登录、跨浏览器读取的验证记录见本地交付记录，不应仅凭已写入前端代码便宣称云保存验证完成。
+
+字体来源：[Google Fonts 官方仓库](https://github.com/google/fonts)。RLS 设计参考：[Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)。

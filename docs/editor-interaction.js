@@ -8,12 +8,12 @@
   tools.innerHTML=`<label>大小<input data-object-prop="w" type="range" min="8" max="90" value="${s.w||28}" aria-label="素材大小"></label><label>角度<input data-object-prop="rotation" type="range" min="-180" max="180" value="${s.rotation||0}" aria-label="素材角度"></label>${s.kind==='shape'?`<label>颜色<input data-object-prop="fill" type="color" value="${s.fill||'#d5dfcc'}" aria-label="形状颜色"></label>`:''}`;
  }
  function objectAt(paper,x,y){
-  // Visual text remains above decorations; hit testing is independent of paint order.
-  return [...paper.querySelectorAll('[data-object]')].reverse().find(el=>{const r=el.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;});
+  // Hit testing follows the same persisted creation order as painting.
+  return [...paper.querySelectorAll('[data-object]')].sort((a,b)=>Number(b.style.zIndex)-Number(a.style.zIndex)).find(el=>{const r=el.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;});
  }
  function textAt(paper,x,y){
   const ctx=document.createElement('canvas').getContext('2d');
-  return [...paper.querySelectorAll('[data-text-layer]')].reverse().find(frame=>{
+  return [...paper.querySelectorAll('[data-text-layer]')].sort((a,b)=>Number(b.style.zIndex)-Number(a.style.zIndex)).find(frame=>{
    const field=frame.querySelector('textarea,input'),r=field.getBoundingClientRect();if(!r.width||x<r.left||x>r.right||y<r.top||y>r.bottom)return false;
    const style=getComputedStyle(field),line=parseFloat(style.lineHeight)||36;ctx.font=`${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
    if(!field.value)return y-r.top<line;
@@ -25,14 +25,14 @@
  function moveText(frame,e){
   e.preventDefault();e.stopImmediatePropagation();
   const id=frame.dataset.textLayer,l=draft(),model=id==='main'||id==='title'?l:l.textBlocks.find(b=>b.id===id),key=id==='main'?'textBox':id==='title'?'titleBox':'box';if(!model)return;
-  const box={x:parseFloat(frame.style.left),y:parseFloat(frame.style.top),w:parseFloat(frame.style.width),h:parseFloat(frame.style.height)},r=frame.closest('.paper').getBoundingClientRect(),x=e.clientX,y=e.clientY;
+  const box={x:parseFloat(frame.style.left),y:parseFloat(frame.style.top),w:parseFloat(frame.style.width),h:frame.getBoundingClientRect().height/frame.closest('.paper').getBoundingClientRect().height*100},r=frame.closest('.paper').getBoundingClientRect(),x=e.clientX,y=e.clientY;
   frame.setPointerCapture(e.pointerId);
   const move=ev=>{model[key]={...box,x:Math.max(0,Math.min(100-box.w,box.x+(ev.clientX-x)/r.width*100)),y:Math.max(0,Math.min(100-box.h,box.y+(ev.clientY-y)/r.height*100))};frame.style.left=model[key].x+'%';frame.style.top=model[key].y+'%';};
   const end=()=>{frame.removeEventListener('pointermove',move);frame.removeEventListener('pointerup',end);frame.removeEventListener('pointercancel',end);window.miao.save();};frame.addEventListener('pointermove',move);frame.addEventListener('pointerup',end);frame.addEventListener('pointercancel',end);
  }
  document.addEventListener('pointerdown',e=>{
   const paper=e.target.closest('.paper');if(!paper||e.button!==0||e.target.closest('button,.object-properties'))return;
-  const mode=paper.dataset.mode||'select',written=mode!=='draw'?textAt(paper,e.clientX,e.clientY):null;
+  const mode=paper.dataset.mode||'select';if(mode==='draw')return;let written=textAt(paper,e.clientX,e.clientY);const topObject=objectAt(paper,e.clientX,e.clientY);if(written&&topObject&&Number(topObject.style.zIndex)>Number(written.style.zIndex))written=null;
   if(mode==='select'&&written){document.querySelectorAll('.layer-box.selected').forEach(n=>n.classList.remove('selected'));written.classList.add('selected');window.miaoLayers.selectText(written.dataset.textLayer);$('.object-properties')?.replaceChildren();if(e.pointerType!=='touch')moveText(written,e);return;}
   if(written?.querySelector('textarea,input').value){document.querySelectorAll('.layer-box.selected').forEach(n=>n.classList.remove('selected'));written.classList.add('selected');window.miaoLayers.selectText(written.dataset.textLayer);$('.object-properties')?.replaceChildren();written.querySelector('textarea,input').focus();if(e.target.closest('[data-text-layer]')!==written){e.preventDefault();e.stopImmediatePropagation();}return;}
   const object=objectAt(paper,e.clientX,e.clientY);
@@ -63,6 +63,5 @@
   if(key==='fill'){const doc=new DOMParser().parseFromString(decodeURIComponent(s.src.split(',').slice(1).join(',')),'image/svg+xml');doc.documentElement.setAttribute('fill',s.fill);s.src='data:image/svg+xml,'+encodeURIComponent(new XMLSerializer().serializeToString(doc));el.querySelector('img').src=s.src;}
   el.style.width=(s.w||28)+'%';el.style.transform=`rotate(${s.rotation||0}deg)`;window.miao.save();
  });
- document.addEventListener('input',e=>{if(!e.target.matches('.paper textarea'))return;const f=e.target.closest('[data-text-layer]'),l=draft(),model=f.dataset.textLayer==='main'?l:l.textBlocks.find(b=>b.id===f.dataset.textLayer),key=f.dataset.textLayer==='main'?'textBox':'box';if(!model)return;const r=$('.paper').getBoundingClientRect(),line=parseFloat(getComputedStyle(e.target).lineHeight)||36,lines=Math.max(1,Math.ceil(e.target.scrollHeight/line)),box=model[key]||{x:8,y:17,w:84,h:10};if(e.target.scrollHeight>e.target.clientHeight+2){model[key]={...box,h:Math.min(98-box.y,(lines+1)*line/r.height*100)};f.style.height=model[key].h+'%';window.miao.save();}});
  window.addEventListener('miao:render',({detail})=>{if(detail.page==='record')queueMicrotask(()=>{if(!$('.object-properties'))$('.shape-tools')?.insertAdjacentHTML('afterend','<div class="object-properties"></div>');window.miaoLayers.setMode($('.paper').dataset.mode||'select');});});
 })();
