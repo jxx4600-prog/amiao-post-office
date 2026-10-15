@@ -1,15 +1,15 @@
 (() => {
  'use strict';
  const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let client,user,key,metaKey,meta={revision:0,dirty:false},pending='',ack='',status='访客 · 仅保存在当前浏览器',timer,busy=false,conflict=false,remoteVersion=null,retry=0,blocked=false,reloading=false;
+ let client,user,key,metaKey,meta={revision:0,dirty:false},pending='',ack='',status='访客 · 仅保存在当前浏览器',timer,busy=false,conflict=false,remoteVersion=null,retry=0,blocked=false,reloading=false,initialSnapshot=null,cacheAvailable=true;
  const valid=s=>s&&Array.isArray(s.letters)&&Array.isArray(s.todos)&&Array.isArray(s.alarms)&&s.draft&&typeof s.draft.text==='string';
  function persistMeta(){if(!metaKey)return;try{localStorage.setItem(metaKey,JSON.stringify(meta));}catch{}}
  function setStatus(text){status=text;document.querySelectorAll('[data-cloud-status]').forEach(el=>el.textContent=status);}
  function readCache(){try{return localStorage.getItem(key)||'';}catch{return '';}}
  function fail(error){
   if(error?.code==='40001'||String(error?.message).includes('amiao_revision_conflict')){conflict=true;setStatus('账号有更新 · 需要处理版本冲突');return;}
-  if(['PGRST205','PGRST202','42P01','42883','42501'].includes(error?.code)){blocked=true;setStatus('账号存储尚未就绪 · 已在当前浏览器保存');return;}
-  setStatus('当前浏览器已保存 · 账号保存待重试');
+  if(['PGRST205','PGRST202','42P01','42883','42501'].includes(error?.code)){blocked=true;setStatus(cacheAvailable?'账号存储尚未就绪 · 已在当前浏览器保存':'账号存储未就绪且本机缓存不足 · 请立即导出备份');return;}
+  setStatus(cacheAvailable?'当前浏览器已保存 · 账号保存待重试':'账号保存失败且本机缓存不足 · 请立即导出备份');
   if(navigator.onLine){clearTimeout(timer);timer=setTimeout(flush,Math.min(60000,5000*2**Math.min(retry++,4)));}
  }
  async function fetchRemote(){const {data,error}=await client.from('amiao_user_state').select('payload,revision,updated_at').eq('user_id',user.id).maybeSingle();if(error)throw error;if(data&&!valid(data.payload))throw Error('账号数据格式异常');return data;}
@@ -26,22 +26,22 @@
    const remote=await fetchRemote();remoteVersion=remote;
    if(remote){
     if(meta.dirty&&pending&&Number(remote.revision)!==meta.revision){conflict=true;setStatus('账号有更新 · 需要处理版本冲突');return;}
-    if(!meta.dirty){const json=JSON.stringify(remote.payload);localStorage.setItem(key,json);ack=json;}
+    if(!meta.dirty){initialSnapshot=remote.payload;const json=JSON.stringify(remote.payload);try{localStorage.setItem(key,json);}catch{cacheAvailable=false;}ack=json;}
     meta.revision=Number(remote.revision);meta.updatedAt=remote.updated_at;persistMeta();
-    setStatus(meta.dirty?'当前浏览器已保存 · 等待保存到账号':'已保存到账号');
+    setStatus(meta.dirty?'当前浏览器已保存 · 等待保存到账号':cacheAvailable?'已保存到账号':'账号记录已读取 · 本机缓存空间不足');
    }else{meta.revision=0;const cached=readCache();if(cached){const parsed=JSON.parse(cached);if(valid(parsed)){pending=cached;meta.dirty=true;persistMeta();}}setStatus(pending?'当前浏览器已保存 · 等待保存到账号':'账号已连接 · 尚无记录');}
   }catch(error){fail(error);}
  }
- function queue(json){
+ function queue(json,options={}){
   if(reloading||!user||new URLSearchParams(location.search).get('qa')==='1')return;
   if(json===ack&&!meta.dirty)return;
-  pending=json;meta.dirty=true;persistMeta();
-  if(!conflict&&!blocked)setStatus('当前浏览器已保存 · 等待保存到账号');
+  cacheAvailable=options.cached!==false;pending=json;meta.dirty=true;persistMeta();
+  if(!conflict&&!blocked)setStatus(cacheAvailable?'当前浏览器已保存 · 等待保存到账号':'本机缓存空间不足 · 正在准备账号保存，请勿关闭');
   clearTimeout(timer);if(!conflict&&!blocked)timer=setTimeout(flush,1200);
  }
  async function flush(){timer=null;
   if(!user||!client||busy||conflict||blocked||!pending)return;
-  if(!navigator.onLine){setStatus('离线 · 当前浏览器已保存');return;}
+  if(!navigator.onLine){setStatus(cacheAvailable?'离线 · 当前浏览器已保存':'离线且本机缓存不足 · 请立即导出备份');return;}
   const json=pending;
   if(new Blob([json]).size>8*1024*1024){setStatus('记录超过账号单次保存上限 · 请导出备份并减少图片');return;}
   busy=true;setStatus('正在保存到账号…');
@@ -49,7 +49,7 @@
    const {data,error}=await client.rpc('save_amiao_state',{p_expected_revision:meta.revision,p_snapshot:JSON.parse(json)});if(error)throw error;
    const saved=Array.isArray(data)?data[0]:data;if(!saved||!Number.isSafeInteger(Number(saved.revision)))throw Error('保存结果未确认');
    meta.revision=Number(saved.revision);meta.updatedAt=saved.updated_at;ack=json;retry=0;
-   if(pending===json){pending='';meta.dirty=false;setStatus('已保存到账号');}else{meta.dirty=true;setStatus('当前浏览器有新修改 · 等待保存到账号');}
+   if(pending===json){pending='';meta.dirty=false;setStatus(cacheAvailable?'已保存到账号':'已保存到账号 · 本机缓存空间不足');}else{meta.dirty=true;setStatus('当前浏览器有新修改 · 等待保存到账号');}
    persistMeta();
   }catch(error){fail(error);}finally{busy=false;}
   if(pending&&!conflict&&!blocked&&!timer)timer=setTimeout(flush,1200);
@@ -92,5 +92,5 @@
  },true);
  window.addEventListener('miao:render',()=>{if(pending&&!timer&&!conflict&&!blocked)timer=setTimeout(flush,1200);document.querySelectorAll('[data-cloud-status]').forEach(el=>el.textContent=status);});
  window.addEventListener('online',()=>{retry=0;blocked=false;flush();});window.addEventListener('pagehide',()=>{persistMeta();flush();});
- window.miaoCloud={ready:initialize(),queue,flush,inspect,download,get reloading(){return reloading},get status(){return status},get dirty(){return meta.dirty},get conflict(){return conflict},get signedIn(){return!!user}};
+ window.miaoCloud={ready:initialize(),queue,flush,inspect,download,get initialSnapshot(){return initialSnapshot},get reloading(){return reloading},get status(){return status},get dirty(){return meta.dirty},get conflict(){return conflict},get signedIn(){return!!user}};
 })();

@@ -5,14 +5,14 @@
  const key=qa?'miao-refined-qa-v3'+(session?'-'+session:''):'miao-refined-v1'+(window.miaoAuth?.storageSuffix||'');
  const localDate=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
  let state={weather:'晴天',alarms:[{time:'08:00',note:'新的一天，慢慢来',ring:'风铃',on:true}],todos:[],letters:[],draft:{text:'',date:localDate(),stickers:[],drawing:''}};
- try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.todos)&&Array.isArray(saved.letters)&&Array.isArray(saved.alarms)){state={...state,...saved};state.draft={text:'',date:localDate(),stickers:[],drawing:'',...saved.draft};}}catch(e){}
+ try{const saved=window.miaoCloud?.initialSnapshot||JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.todos)&&Array.isArray(saved.letters)&&Array.isArray(saved.alarms)){state={...state,...saved};state.draft={text:'',date:localDate(),stickers:[],drawing:'',...saved.draft};}}catch(e){}
  const view=document.querySelector('#view'),nav=document.querySelector('#navigation'),modal=document.querySelector('#modal'),content=document.querySelector('#modal-content');
  const cats=['白白','莉莉','阿夜','大王'];
  const weather={'晴天':'☀','阴天':'☁','小雨':'☂','雪天':'❄','大风':'彡','雷雨':'ϟ','彩虹':'⌒','多云':'☁'};
  let page='home',homeIndex=0,courier='',currentBox='',filter='all',query='',drawing=false,hasInk=false,ctx,canvas,strokes=[],audio;
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function toast(text){const el=document.querySelector('#toast');el.textContent=text;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,2600);}
- function save(){if(window.miaoCloud?.reloading)return;try{const json=JSON.stringify(state);localStorage.setItem(key,json);window.miaoCloud?.queue(json);}catch(e){toast('储存空间不足，请减少上传图片后重试');}}
+ function save(){if(window.miaoCloud?.reloading)return;let json;try{json=JSON.stringify(state);}catch{return;}let cached=true;try{localStorage.setItem(key,json);}catch{cached=false;toast(window.miaoCloud?.signedIn?'本机缓存空间不足，正在尝试账号保存，请勿关闭网页':'储存空间不足，请导出备份并减少图片');}window.miaoCloud?.queue(json,{cached});}
  const bar=(title,back='home')=>`<header class="bar"><button class="icon" data-page="${back}" title="返回" aria-label="返回">‹</button><h1>${title}</h1><span style="width:34px"></span></header>`;
  const catButtons=()=>cats.map(c=>`<button data-courier="${c}" class="${courier===c?'selected':''}" aria-pressed="${courier===c}"><img src="assets/${c}.webp" alt="">${c}</button>`).join('');
  function snapshot(){if(window.miaoCloud?.reloading)return;if(page==='record'){state.draft.text=document.querySelector('#note').value;state.draft.date=document.querySelector('#note-date').value;if(canvas&&state.draft.drawing)state.draft.drawing=canvas.toDataURL();save();}}
