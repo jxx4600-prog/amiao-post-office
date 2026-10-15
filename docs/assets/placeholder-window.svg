@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 160">
+  <rect x="6" y="6" width="248" height="120" rx="12" fill="#FEF9C3" stroke="#7B4728" stroke-width="4" />
+  <g stroke="#7B4728" stroke-width="3" fill="none">
+    <circle cx="70" cy="66" r="18" />
+    <path d="M55 80 Q70 92 85 80" />
+    <circle cx="185" cy="66" r="18" />
+    <path d="M170 80 Q185 92 200 80" />
+  </g>
+  <text x="130" y="140" font-family="ZCOOL KuaiLe, sans-serif" font-size="18" fill="#7B4728" text-anchor="middle">窗口占位</text>
+</svg>

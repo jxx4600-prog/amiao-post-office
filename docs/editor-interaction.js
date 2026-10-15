@@ -1,0 +1,53 @@
+(() => {
+ const $=s=>document.querySelector(s),draft=()=>window.miao.state.draft;
+ function selectObject(el){
+  document.querySelectorAll('.layer-box.selected').forEach(n=>n.classList.remove('selected'));
+  el.focus();window.miaoLayers.selectObject(Number(el.dataset.object));const s=draft().stickers[Number(el.dataset.object)];if(!s)return;
+  let tools=$('.object-properties');if(!tools){tools=document.createElement('div');tools.className='object-properties';$('.shape-tools').after(tools);}
+  tools.dataset.objectIndex=el.dataset.object;
+  tools.innerHTML=`<label>大小<input data-object-prop="w" type="range" min="8" max="90" value="${s.w||28}" aria-label="素材大小"></label><label>角度<input data-object-prop="rotation" type="range" min="-180" max="180" value="${s.rotation||0}" aria-label="素材角度"></label>${s.kind==='shape'?`<label>颜色<input data-object-prop="fill" type="color" value="${s.fill||'#d5dfcc'}" aria-label="形状颜色"></label>`:''}`;
+ }
+ function objectAt(paper,x,y){
+  // Visual text remains above decorations; hit testing is independent of paint order.
+  return [...paper.querySelectorAll('[data-object]')].reverse().find(el=>{const r=el.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;});
+ }
+ function textAt(paper,x,y){
+  const ctx=document.createElement('canvas').getContext('2d');
+  return [...paper.querySelectorAll('[data-text-layer]')].reverse().find(frame=>{
+   const field=frame.querySelector('textarea,input'),r=field.getBoundingClientRect();if(!r.width||x<r.left||x>r.right||y<r.top||y>r.bottom)return false;
+   const style=getComputedStyle(field),line=parseFloat(style.lineHeight)||36;ctx.font=`${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+   if(!field.value)return y-r.top<line;
+   const rows=[];for(const para of field.value.split('\n')){let row='';for(const ch of para){if(row&&ctx.measureText(row+ch).width>r.width){rows.push(row);row=ch;}else row+=ch;}rows.push(row);}
+   const row=rows[Math.floor((y-r.top+field.scrollTop)/line)];if(row===undefined)return false;
+   const width=ctx.measureText(row).width+row.length*(parseFloat(style.letterSpacing)||0),offset=style.textAlign==='center'?(r.width-width)/2:0;return x-r.left>=offset-5&&x-r.left<=offset+width+12;
+  });
+ }
+ document.addEventListener('pointerdown',e=>{
+  const paper=e.target.closest('.paper');if(!paper||e.button!==0||e.target.closest('button,.object-properties'))return;
+  const written=!paper.classList.contains('draw')?textAt(paper,e.clientX,e.clientY):null;
+  if(written?.querySelector('textarea,input').value){document.querySelectorAll('.layer-box.selected').forEach(n=>n.classList.remove('selected'));written.classList.add('selected');window.miaoLayers.selectText(written.dataset.textLayer);$('.object-properties')?.replaceChildren();written.querySelector('textarea,input').focus();if(e.target.closest('[data-text-layer]')!==written){e.preventDefault();e.stopImmediatePropagation();}return;}
+  const object=objectAt(paper,e.clientX,e.clientY);
+  if(object){selectObject(object);if(e.target.closest('[data-object]'))return;e.preventDefault();e.stopImmediatePropagation();
+   const s=draft().stickers[Number(object.dataset.object)],r=paper.getBoundingClientRect(),x=e.clientX,y=e.clientY,sx=s.x,sy=s.y;
+   object.setPointerCapture(e.pointerId);
+   const move=ev=>{s.x=Math.max(0,Math.min(100-(s.w||28),sx+(ev.clientX-x)/r.width*100));s.y=Math.max(0,Math.min(95,sy+(ev.clientY-y)/r.height*100));object.style.left=s.x+'%';object.style.top=s.y+'%';};
+   const end=()=>{object.removeEventListener('pointermove',move);object.removeEventListener('pointerup',end);object.removeEventListener('pointercancel',end);window.miao.save();};object.addEventListener('pointermove',move);object.addEventListener('pointerup',end);object.addEventListener('pointercancel',end);return;
+  }
+  if(paper.classList.contains('draw'))return;
+  const mode=paper.dataset.mode||'text';if(mode!=='text')return;
+  $('.object-properties')?.replaceChildren();const frame=textAt(paper,e.clientX,e.clientY);
+  document.querySelectorAll('.layer-box.selected').forEach(n=>n.classList.remove('selected'));
+  if(frame){frame.classList.add('selected');window.miaoLayers.selectText(frame.dataset.textLayer);frame.querySelector('textarea,input').focus();if(e.target.closest('[data-text-layer]')===frame)return;}
+  e.preventDefault();e.stopImmediatePropagation();if(frame)return;
+  const r=paper.getBoundingClientRect(),x=Math.max(2,Math.min(78,(e.clientX-r.left)/r.width*100)),y=Math.max(2,Math.min(88,(e.clientY-r.top)/r.height*100));
+  window.miaoLayers.addTextAt({x,y,w:Math.min(70,96-x),h:Math.max(9,Math.min(20,96-y))});
+ },true);
+ document.addEventListener('input',e=>{
+  const key=e.target.dataset.objectProp;if(!key)return;const tools=e.target.closest('.object-properties'),index=Number(tools.dataset.objectIndex),s=draft().stickers[index],el=$(`.sticker[data-object="${index}"]`);if(!s||!el)return;
+  s[key]=key==='fill'?e.target.value:Number(e.target.value);
+  if(key==='fill'){const doc=new DOMParser().parseFromString(decodeURIComponent(s.src.split(',').slice(1).join(',')),'image/svg+xml');doc.documentElement.setAttribute('fill',s.fill);s.src='data:image/svg+xml,'+encodeURIComponent(new XMLSerializer().serializeToString(doc));el.querySelector('img').src=s.src;}
+  el.style.width=(s.w||28)+'%';el.style.transform=`rotate(${s.rotation||0}deg)`;window.miao.save();
+ });
+ document.addEventListener('input',e=>{if(!e.target.matches('.paper textarea'))return;const f=e.target.closest('[data-text-layer]'),l=draft(),model=f.dataset.textLayer==='main'?l:l.textBlocks.find(b=>b.id===f.dataset.textLayer),key=f.dataset.textLayer==='main'?'textBox':'box';if(!model)return;const r=$('.paper').getBoundingClientRect(),line=parseFloat(getComputedStyle(e.target).lineHeight)||36,lines=Math.max(1,Math.ceil(e.target.scrollHeight/line)),box=model[key]||{x:8,y:17,w:84,h:10};if(e.target.scrollHeight>e.target.clientHeight+2){model[key]={...box,h:Math.min(98-box.y,(lines+1)*line/r.height*100)};f.style.height=model[key].h+'%';window.miao.save();}});
+ window.addEventListener('miao:render',({detail})=>{if(detail.page==='record')queueMicrotask(()=>{if(!$('.object-properties'))$('.shape-tools')?.insertAdjacentHTML('afterend','<div class="object-properties"></div>');});});
+})();

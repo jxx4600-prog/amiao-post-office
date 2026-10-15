@@ -1,0 +1,74 @@
+#app #view .home-cat{left:2%;top:36%;width:56%;height:45%;align-items:flex-end;overflow:visible}
+#app #view .home-cat .courier-puppet{height:min(100%,250px,56cqw);width:auto;max-width:none;aspect-ratio:1;flex:none;animation:none;transform:none}
+#app #view .cat{left:2%;top:36%;width:56%;height:45%}
+.courier-still,.courier-frames{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;animation:none!important;transform:none!important}
+.home-weather .whole-sun{position:absolute!important;left:18%!important;top:0!important;width:76%!important;height:76%!important;object-fit:contain;animation:none}
+.home-weather .sun-cat{position:absolute!important;left:3%!important;top:52%!important;width:37%!important;height:37%!important;object-fit:contain;animation:none!important}
+.home-weather .sun-label{position:absolute;left:3%;bottom:0;font-size:15px;color:#865232;transform:rotate(-2deg)}
+.postal-doodles{position:absolute;left:7%;top:34%;width:42%;height:15%;display:flex;align-items:center;gap:8px;pointer-events:none;z-index:2}
+.postal-doodles img{width:42%;height:100%;object-fit:contain;transform:rotate(-8deg)}
+.postal-doodles span{font-size:11px;line-height:1.7;max-width:70px;color:#a18b72;transform:rotate(-4deg)}
+.postal-doodles i{position:absolute;left:8%;right:9%;bottom:2%;height:10px;border-bottom:1px dashed #b8c5b0;border-radius:50%}
+.postal-doodles i{bottom:18%}
+#app #view .home-clock-illustration{top:43%}#app #view .clock{top:42%}
+#app #view .home-flower{bottom:14%;left:3%;z-index:2}
+#app .couriers img{animation:none;width:100%;height:64px;object-fit:contain;object-position:center bottom;margin:0 0 5px}
+.loading-heads{display:flex;justify-content:center;gap:8px;padding:0 20px}
+.loading-heads img{width:26%;height:85px;object-fit:contain;object-position:center bottom}
+.loading-copy{font-size:20px;text-align:center;margin:18px 0;color:var(--ink)}
+#app #view>.page,#app #view>.home,#app #view>.editor{animation:none}
+.zone-controls button,.zone-controls button *{color:var(--ink);opacity:1}
+.clock-seconds{animation:none!important}
+.home-weather .weather-symbol-scene{width:100%;height:100%;object-fit:contain}
+.window-note{position:absolute;left:15%;right:15%;top:30%;font-size:12px;line-height:1.7;text-align:center;color:#967858;pointer-events:none}
+#app #view .home-clock-illustration{left:55%;top:67%;width:21%}#app #view .home-clock-illustration img{left:-20%;top:-20%;width:140%;height:140%}
+#app #view .clock{left:55%;top:66%;width:20%;height:16%}#app #view .time-caption{left:55%;top:78%;width:21%;height:4%;font-size:11px}
+#app #view .home-calendar-illustration{left:74%;top:67%;width:25%}#app #view .calendar{left:74%;top:66%;width:25%;height:17%}
+.calendar-date{left:42%;top:34%;width:32%;gap:2px}.calendar-date small{font-size:11px}.calendar-date strong{font-size:12px;white-space:nowrap}
+#app #view .todo-caption{position:absolute;left:73%;top:82%;width:27%;height:4%;font-size:11px;font-family:MiaoLatin,MiaoRound,sans-serif;text-align:center;color:var(--ink)}
+#app #view .home-weather .sky-sun{left:12%;top:-2%;width:76%;height:76%;object-fit:contain;max-width:none;animation:none;transform-origin:50% 50%;filter:sepia(.85) saturate(1.45) brightness(1.13)}
+#app #view .home-weather .sky-cloud{left:42%;top:59%;width:55%;height:31%;object-fit:contain;max-width:none;animation:none;z-index:2}
+#app #view .home-weather .sky-cloud.rainy{left:0;top:4%;width:100%;height:56%}
+#app #view .home-weather .sky-arch{left:0;top:0;width:100%;height:100%;object-fit:fill;max-width:none;animation:none;filter:saturate(.65)}
+#app #view .home-weather .sky-cloud.rainbow-left{left:0;top:43%;width:42%;height:35%}
+#app #view .home-weather .sky-cloud.rainbow-right{left:58%;top:43%;width:42%;height:35%}
+#app #view .home-weather .rain-cat-word{left:7%;top:56%;width:86%;height:24%;max-width:none;object-fit:contain;animation:none}
+#app #view .home-weather[data-weather=rain] .rain-field{top:79%;height:21%}
+#app #view .home-clock-illustration{left:43%;top:46%;width:14%}#app #view .home-clock-illustration img{left:-20%;top:-20%;width:140%;height:140%}#app #view .clock{left:42%;top:45%;width:17%;height:12%}#app #view .time-caption{left:40%;top:55%;width:21%;height:4%;font-size:10px}
+#app #view .home-calendar-illustration{left:66%;top:68%;width:24%}#app #view .calendar{left:65%;top:67%;width:26%;height:16%}#app #view .todo-caption{left:65%;top:82%;width:26%;height:4%;font-size:11px}
+@media(prefers-reduced-motion:no-preference){#app #view .home-weather .sky-sun{animation:whole-sun-turn 22s linear infinite}#app #view .home-weather .sky-cloud{animation:cloud-puff 4.2s ease-in-out infinite}#app #view .home-weather .sky-cloud.rainbow-right{animation-delay:-1.3s}#app #view .home-weather .sky-arch{animation:rainbow-reveal 5s linear infinite}@keyframes cloud-puff{50%{transform:scaleX(.94) scaleY(.96)}}@keyframes rainbow-reveal{0%{clip-path:inset(0 100% 0 0)}40%,80%{clip-path:inset(0 0 0 0)}90%,100%{clip-path:inset(0 100% 0 0)}}}
+@media(prefers-reduced-motion:no-preference){
+ #app #view .home-weather .whole-sun{animation:whole-sun-turn 20s linear infinite;transform-origin:center}
+ .postal-doodles img{animation:postal-sway 7s ease-in-out infinite}
+ .loading-heads img{animation:loading-head-hop 1.2s ease-in-out infinite}.loading-heads img:nth-child(2){animation-delay:.15s}.loading-heads img:nth-child(3){animation-delay:.3s}
+ @keyframes whole-sun-turn{to{transform:rotate(360deg)}}
+ @keyframes postal-sway{50%{transform:rotate(-3deg) translateY(-2px)}}
+ @keyframes loading-head-hop{50%{transform:translateY(-8px)}}
+}
+.zone-controls,.zone-controls button,#zone-form{font-family:"Microsoft YaHei","PingFang SC",sans-serif;font-weight:600;color:var(--ink);opacity:1}
+#app #view .daily-caption{top:58.5%;height:3.5%}
+#app #view .time-caption{left:46%;width:18%;top:53%;height:3%}
+#app #view .todo-caption{top:80.5%;height:3%;background:transparent}
+@media(max-height:670px){#app #view .home-cat{top:37%;height:43%}#app #view .home-cat .courier-puppet{height:min(100%,220px,56cqw);width:auto}}
+.tap-paw{position:fixed;z-index:1000;width:27px;height:27px;color:#9b6c49;pointer-events:none;transform:translate(-50%,-50%);animation:tap-paw-fade .26s ease-out both}
+.tap-paw svg{width:100%;height:100%}
+@font-face{font-family:MiaoRound;src:local('Microsoft YaHei');unicode-range:U+65F6;font-weight:400}
+@font-face{font-family:MiaoRound;src:local('Microsoft YaHei Bold'),local('Microsoft YaHei');unicode-range:U+65F6;font-weight:700 900}
+#task-reminder{width:min(390px,calc(100% - 32px));border:1px solid #bba689;border-radius:6px;background:var(--paper);color:var(--ink);padding:24px;font-family:MiaoLatin,MiaoRound,sans-serif}
+#task-reminder::backdrop{background:#51443266}
+#task-reminder h2{font-size:18px;display:flex;align-items:center;gap:8px;margin-top:8px}
+#task-reminder h2 svg{width:24px;height:24px;flex:none}
+#task-reminder p{font-size:19px;line-height:1.6;overflow-wrap:anywhere}
+#task-reminder .reminder-note{font-size:14px;color:#9a8066}
+#task-reminder .reminder-close{position:absolute;right:8px;top:8px;width:26px;height:26px;transform:rotate(45deg)}
+#task-reminder .reminder-close svg{width:18px;height:18px}
+#task-reminder .letter-actions{display:grid;grid-template-columns:1fr 1fr}
+#task-reminder .letter-actions button{min-width:0;font-size:13px}
+#task-reminder .letter-actions button:last-child{grid-column:1/-1}
+.reminder-sound{display:flex!important;align-items:center;gap:8px}.reminder-sound input{width:18px!important}
+dialog[open],.letter{animation:none!important;opacity:1}
+#app #view .home-clock-illustration{top:43%}#app #view .clock{top:42%}
+#app #view .home-caption{background:transparent}
+@keyframes tap-paw-fade{0%{opacity:.8;transform:translate(-50%,-50%) scale(.75)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+@media(hover:hover) and (pointer:fine){#app,#app button,#modal,#modal button{cursor:url('assets/paw-cursor.svg') 8 8,pointer}#app .paper.draw{cursor:url('assets/paw-cursor.svg') 8 8,crosshair}}
+@media(prefers-reduced-motion:reduce){.tap-paw{animation:none;opacity:.6}}

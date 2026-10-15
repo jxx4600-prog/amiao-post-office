@@ -1,0 +1,6 @@
+Natural cat recordings: cat_softmew.wav and cat_mewfood.wav
+Author: Kerzoven
+Source: https://opengameart.org/content/cat-purr-meow
+License: CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/
+Downloaded 2026-10-14. Edited into ring-meow-real-v3.wav with pauses,
+level adjustment, resampling and short fades. No synthetic vocal tones added.
