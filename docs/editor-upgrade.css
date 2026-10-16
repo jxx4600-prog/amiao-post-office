@@ -2,3 +2,19 @@
 .paper .title-layer textarea::placeholder{font-size:18px;color:#bca98a;font-weight:400}.paper .layer-box{min-height:0}.paper .layer-box textarea{overflow:hidden!important;resize:none}.paper .layer-box:focus-within,.paper .layer-box.selected{border-color:#b7a58b;border-style:dashed}
 .paper .layer-resize{right:-8px;top:calc(50% - 8px);bottom:auto;width:16px;height:16px;border-radius:50%;border:2px solid #9b7855;background:#fffceb;cursor:ew-resize;box-shadow:0 0 0 4px #fffceb55;touch-action:none}.paper .layer-resize svg{display:none}.paper .layer-resize:after{content:'';position:absolute;inset:-9px;border-radius:50%}.paper .layer-box:not(.selected):not(:focus-within) .layer-resize{opacity:.3}.paper .layer-resize:focus-visible{outline:2px solid #7b4728;outline-offset:4px}.paper .layer-box button{pointer-events:auto}.paper #stickers{position:static!important;z-index:auto!important}.paper .sticker:focus-within{isolation:auto}.letter-scene .journal-title{white-space:pre-wrap}
 .font-preview{padding:12px;margin:12px 0;background:#f3eedb;border-radius:4px;font-size:22px;line-height:1.7;overflow-wrap:anywhere}.font-helper{font-size:12px;line-height:1.7;color:#8b735e}.journal-settings select{max-width:100%}
+
+/* Keep letter dialogs anchored while fonts and paper art become available. */
+#modal[data-letter-view]{position:fixed;inset:16px 0 auto;margin:0 auto;width:min(calc(100% - 32px),380px);max-height:calc(100dvh - 32px);scrollbar-gutter:stable;animation:none;transform:none;overflow-anchor:none}
+.letter-scene{container-type:inline-size}
+.postcard-stamp{left:var(--stamp-left,78%);right:auto;top:var(--stamp-top,10%);width:var(--stamp-width,15%);height:var(--stamp-height,25%);box-sizing:border-box;padding:3px;display:grid;place-items:center;z-index:5}
+.postcard-stamp img{display:block;width:100%;height:100%;min-height:0;object-fit:contain;padding:0}
+[data-themed-postcard=true] .postcard-stamp{border:0;padding:3px}
+[data-themed-postcard=true] .postcard-divider{display:none}
+.postcard-divider{width:29%}.postcard-divider:after{left:12%;width:88%}
+.postcard-date{position:absolute;left:calc(var(--stamp-left,78%) + var(--stamp-width,15%) / 2);top:calc(var(--stamp-top,10%) + var(--stamp-height,25%) + 1.5%);transform:translateX(-50%);width:max-content;max-width:27%;white-space:nowrap;text-align:center;font:700 clamp(5px,2.2cqw,9px)/1.2 MiaoLatin,sans-serif;letter-spacing:0;color:var(--ink);z-index:5;pointer-events:none}
+.mail-list-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:stretch;gap:8px;margin-bottom:12px;min-width:0}
+.letters .mail-list-row,.inbox-grid .mail-list-row{margin:0}
+.mail-list-row>.letter,.mail-list-row>.inbox-envelope{width:100%;min-width:0;overflow-wrap:anywhere}
+.mail-list-delete{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:44px;padding:8px 3px;border:1px solid #b9a48b;border-radius:4px;color:var(--ink);font-size:12px}
+.mail-list-delete svg{width:17px;height:17px}
+.mail-list-delete:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
