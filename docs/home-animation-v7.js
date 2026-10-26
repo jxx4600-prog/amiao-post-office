@@ -24,11 +24,6 @@
   await window.miaoAssets.ready;if(current!==ticket||!home.isConnected)return;
   puppet.innerHTML=`<img class="courier-still" style="top:${(384-stillBottoms[row])/384*100}%" src="${window.miaoAssets.body(name)}" alt="">`;
 
-  let frames;try{frames=await Promise.all(Array.from({length:4},(_,i)=>[load(`assets/frames/main-${row}-${i}.webp`),load(`assets/frames/between-${row}-${i}.webp`)]).flat());}catch{return;}if(current!==ticket||!home.isConnected)return;
-  const canvas=document.createElement('canvas');canvas.className='courier-frames';canvas.width=canvas.height=512;canvas.setAttribute('aria-hidden','true');puppet.replaceChildren(canvas);const ctx=canvas.getContext('2d');
-  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),sequence=[0,0,0,0,0,0,0,0,1,2,3,4,5,6,6,6,7],start=performance.now();let last=-1;
-  function paint(now){if(current!==ticket||!canvas.isConnected)return;const frame=reduced.matches?0:sequence[Math.floor(Math.max(0,now-start)/125)%sequence.length];if(frame!==last){ctx.clearRect(0,0,512,512);ctx.drawImage(frames[frame],0,(384-frameBottoms[row][frame])*512/384,512,512);canvas.dataset.frame=frame;last=frame;}if(!reduced.matches)setTimeout(()=>requestAnimationFrame(paint),document.hidden?500:125);}
-  paint(start);
   const deco=index=>`assets/home-parts/postal-${index}.webp`;
   const weather=home.querySelector('.home-weather');
   const choice=weather.dataset.weather||'sun';
@@ -40,6 +35,13 @@
   const notes=['小事也有自己的邮戳。','今天的云，暂时不赶路。','把一小段时间，留给窗外。','没有新鲜事，也可以寄一封信。','路过的风，已经替你签收。','此刻没答案，先夹进书里。','日子慢一点，细节就多一点。','一朵花的进度，也算进度。'];
   home.querySelector('.home-window').insertAdjacentHTML('beforeend',`<span class="window-note">${notes[Math.floor(Math.random()*notes.length)]}</span>`);
   const tips=['眼睛申请放风三十秒。批准！','喝口水，别把自己晾成小鱼干。','待办很多？先捞最小的一条。','灵感还没到？先放它出去溜一圈。','肩膀别加班，放松一下。','记录不用写满，留点空白给明天。','杯子空了，水分补给站开门啦。','今天先完成一件，剩下的排队。','伸个懒腰，给骨头放个短假。','手机也累了，让它坐一会儿。','走两步，没准灵感就在门口。','饭要趁热，烦恼可以晚点处理。','先吃饭，再和难题对线。','文件记得存，猫猫不负责撤回。','给自己五分钟空档，不用填满。','困了就休息，不和哈欠较劲。','窗外有免费天气，去看两眼。','桌面收一小块，就算今日胜利。','大计划切小块，像分小鱼干。','没写完的句子，明天接着写。','这封信不用满分，寄出就算数。','再忙也要给水杯续个杯。','任务有队列，你也有休息时间。','别急，猫猫还没系好邮袋。'];home.querySelector('.home-tip p').textContent=tips[Math.floor(Math.random()*tips.length)];alignCaptions(home);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  await new Promise(resolve=>{if(window.requestIdleCallback)window.requestIdleCallback(resolve,{timeout:500});else setTimeout(resolve,100);});if(current!==ticket||!home.isConnected)return;
+  let frames;try{frames=await Promise.all(Array.from({length:4},(_,i)=>[load(`assets/frames/main-${row}-${i}.webp`),load(`assets/frames/between-${row}-${i}.webp`)]).flat());}catch{return;}if(current!==ticket||!home.isConnected)return;
+  const canvas=document.createElement('canvas');canvas.className='courier-frames';canvas.width=canvas.height=512;canvas.setAttribute('aria-hidden','true');puppet.replaceChildren(canvas);const ctx=canvas.getContext('2d');
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),sequence=[0,0,0,0,0,0,0,0,1,2,3,4,5,6,6,6,7],start=performance.now();let last=-1;
+  function paint(now){if(current!==ticket||!canvas.isConnected)return;const frame=reduced.matches?0:sequence[Math.floor(Math.max(0,now-start)/125)%sequence.length];if(frame!==last){ctx.clearRect(0,0,512,512);ctx.drawImage(frames[frame],0,(384-frameBottoms[row][frame])*512/384,512,512);canvas.dataset.frame=frame;last=frame;}if(!reduced.matches)setTimeout(()=>requestAnimationFrame(paint),document.hidden?500:125);}
+  paint(start);
  }
  window.addEventListener('miao:render',({detail})=>{ticket++;if(detail.page==='home')decorate();});
 })();

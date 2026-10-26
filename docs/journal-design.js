@@ -3,7 +3,7 @@
  const names=['白白','莉莉','阿夜','大王'],papers={},fonts=window.miaoTypography.fonts;
  let resourcePromise;const getReady=()=>resourcePromise??=new Promise(resolve=>{const im=new Image();im.onload=()=>{names.forEach((name,i)=>{const c=document.createElement('canvas');c.width=512;c.height=768;const split=im.height*.46875;c.getContext('2d').drawImage(im,i%2*im.width/2,i<2?0:split,im.width/2,i<2?split:im.height-split,0,0,512,768);papers[name]=c.toDataURL('image/webp',.94);});resolve();};im.onerror=()=>resolve();im.src='assets/stationery-atlas-v7.webp';});
  const ready={then(resolve,reject){return getReady().then(resolve,reject);}};
- const font=l=>fonts[l.fontFamily]||fonts.cartoon;
+ const font=l=>{window.miaoTypography.ensureFonts();return fonts[l.fontFamily]||fonts.cartoon;};
  const line=l=>Math.max(Number(l.fontSize)||19,Number(l.lineHeight)||Math.max(36,Math.round((Number(l.fontSize)||19)*1.65)));
  function box(l){return l.textBox||{x:10,y:l.title?27:l.paperVariant==='none'?6:18,w:80,h:l.title?56:l.paperVariant==='none'?79:66};}
  function metrics(el,l){const fs=Number(l.fontSize)||19,lh=line(l),c=document.createElement('canvas'),ctx=c.getContext('2d');ctx.font=`700 ${fs}px ${font(l)}`;const m=ctx.measureText('田Ag'),a=m.fontBoundingBoxAscent||fs*.8,d=m.fontBoundingBoxDescent||fs*.2;el.style.setProperty('--letter-font',fs+'px');el.style.setProperty('--letter-line',lh+'px');el.style.setProperty('--rule-offset',((lh-a-d)/2+a+3)+'px');el.style.setProperty('--text-font',font(l));el.style.setProperty('--text-color',/^#[0-9a-f]{6}$/i.test(l.textColor||'')?l.textColor:'#7b4728');el.style.setProperty('--text-spacing',Math.max(0,Math.min(8,Number(l.charSpacing)||0))+'px');}
