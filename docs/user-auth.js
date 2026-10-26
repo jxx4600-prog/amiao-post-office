@@ -2,11 +2,13 @@
  'use strict';
  const config=window.miaoAuthConfig,$=s=>document.querySelector(s);
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let client=null,user=null,problem='',initialized=false,switching=false,onboardingShown=false;
+ let client=null,user=null,problem='',initialized=false,switching=false,onboardingShown=false,offlineId='';
  let recovery=new URL(location.href).searchParams.get('auth')==='recovery';
  try{recovery=recovery||sessionStorage.getItem('miao-password-recovery')==='1';}catch{}
  const cooldownKey='miao-auth-mail-sent-v1';
  const suffix=id=>id&&/^[a-f0-9-]{36}$/i.test(id)?':user:'+id:'';
+ function deadline(work,ms=4000){let timer;return Promise.race([work,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('auth_startup_timeout')),ms);})]).finally(()=>clearTimeout(timer));}
+ function cachedId(){try{const saved=JSON.parse(localStorage.getItem('amiao-auth-v1'));return suffix(saved?.user?.id)?saved.user.id:'';}catch{return '';}}
  function cleanCallback(){
   const url=new URL(location.href);
   for(const key of ['code','error','error_code','error_description','auth'])url.searchParams.delete(key);
@@ -29,7 +31,7 @@
   if(!window.miao||window.miao.page!=='mine')return;
   const details=window.miaoPeople.profile(window.miao.state,user);
   $('.account-row')?.remove();
-  $('.page .content')?.insertAdjacentHTML('afterbegin',`<div class="account-row"><div><strong>${escape(details.nickname)||(user?'我的账号':'访客')}</strong><small>${user?escape(user.email):'记录保存在当前浏览器'}</small></div><button data-auth="open">${user?'账号':'登录'}</button></div>`);
+  $('.page .content')?.insertAdjacentHTML('afterbegin',`<div class="account-row"><div><strong>${escape(details.nickname)||(user?'我的账号':offlineId?'账号待连接':'访客')}</strong><small>${user?escape(user.email):offlineId?'正在使用此账号的本机记录':'记录保存在当前浏览器'}</small></div><button data-auth="open">${user||offlineId?'账号':'登录'}</button></div>`);
   if(user&&!recovery&&(!details.nickname||!details.birthday)&&!onboardingShown&&!$('#modal[open]')){onboardingShown=true;openProfile();}
  }
  function openProfile(){
@@ -40,8 +42,9 @@
   if(!user){openAccount('reset');return;}
   window.miao.open(`<h2>设置账号密码</h2><form id="auth-password-form"><label>新密码<input type="password" name="password" autocomplete="new-password" minlength="8" maxlength="128" required></label><label>确认新密码<input type="password" name="confirm" autocomplete="new-password" minlength="8" maxlength="128" required></label><button class="primary" type="submit">保存密码</button></form><p class="auth-note">至少8位。设置后，可使用当前邮箱和密码登录。</p><p id="auth-status" role="status" aria-live="polite"></p>`);
  }
- function openAccount(mode='login'){
+ function openAccount(mode='login',credentials=false){
   window.miao.snapshot();
+  if(offlineId&&!credentials){window.miao.open(`<h2>账号暂未连接</h2><p class="auth-note">目前显示此账号在当前浏览器保留的记录。新修改会先保存在本机，连接恢复后会检查版本再同步。</p><strong data-cloud-status>${escape(window.miaoCloud?.status||'账号连接待重试')}</strong><div class="auth-actions"><button data-auth="retry">重新连接</button><button data-auth="export">备份当前记录</button><button data-auth="login">重新登录</button></div>`);return;}
   if(user){
    window.miao.open(`<h2>我的账号</h2><div class="account-profile"><img src="assets/白白.png" alt=""><strong>${escape(user.email)}</strong></div><p class="auth-note">账号记录通过 Supabase 保存；请以同步状态为准。离线或保存失败时，修改暂存当前浏览器。<br><strong data-cloud-status>${escape(window.miaoCloud?.status||'正在检查账号记录')}</strong><button data-cloud="inspect">检查账号记录 / 重试保存</button><button data-cloud="import-guest">导入此浏览器访客记录</button></p><div class="auth-actions"><button data-auth="profile">昵称与生日</button><button data-auth="password">设置或修改密码</button><button data-auth="export">备份当前记录</button><button data-auth="logout">退出登录</button></div><p id="auth-status" role="status" aria-live="polite"></p>`);
    return;
@@ -55,13 +58,12 @@
   location.reload();
  }
  async function initialize(){
+  const localId=cachedId();
   try{
    if(!window.supabase?.createClient)throw new Error('sdk_unavailable');
    client=window.supabase.createClient(config.url,config.publishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,storageKey:'amiao-auth-v1'},global:{fetch:(input,init)=>fetch(input,{...init,signal:init?.signal||AbortSignal.timeout(15000)})}});
    const callback=new URLSearchParams(location.search).has('code');
-   const {data:sessionData,error:sessionError}=await client.auth.getSession();
-   if(sessionError)throw sessionError;
-   if(sessionData.session){const {data,error}=await client.auth.getUser();if(error)throw error;user=data.user;}
+   user=await deadline((async()=>{const {data:sessionData,error:sessionError}=await client.auth.getSession();if(sessionError)throw sessionError;if(!sessionData.session)return null;const {data,error}=await client.auth.getUser();if(error)throw error;return data.user;})());
    if(callback&&!user)problem='登录链接未能验证，请重新获取并在原浏览器打开。';
    if(new URLSearchParams(location.search).has('error'))problem='登录链接无效或已过期，请重新获取。';
    cleanCallback();
@@ -75,7 +77,7 @@
      try{const {data,error}=await client.auth.getUser();if(!error&&data.user?.id!==user?.id)reloadAccount();}catch{}
     },0);
    });
-  }catch(error){problem=friendly(error);cleanCallback();}
+  }catch(error){offlineId=localId;problem=offlineId?'账号连接暂时较慢，已打开此账号的本机记录。可在“我的”中重新连接。':friendly(error);cleanCallback();}
   initialized=true;
  }
  document.addEventListener('submit',async e=>{
@@ -140,7 +142,8 @@
   const button=e.target.closest('[data-auth]');if(!button||!window.miao)return;
   e.preventDefault();e.stopImmediatePropagation();
   if(button.dataset.auth==='open'){openAccount();return;}
-  if(['login','signup','reset'].includes(button.dataset.auth)){openAccount(button.dataset.auth);return;}
+  if(button.dataset.auth==='retry'){reloadAccount();return;}
+  if(['login','signup','reset'].includes(button.dataset.auth)){openAccount(button.dataset.auth,true);return;}
   if(button.dataset.auth==='password'){openPassword();return;}
   if(button.dataset.auth==='profile'){openProfile();return;}
   if(button.dataset.auth==='export'){
@@ -153,6 +156,6 @@
   }
  },true);
  window.addEventListener('miao:render',({detail})=>{if(detail.page==='mine')queueMicrotask(accountRow);});
- window.miaoAuth={ready:null,get user(){return user},get storageSuffix(){return suffix(user?.id)},suffix,friendly,openProfile,openAccount,get client(){return client}};
+ window.miaoAuth={ready:null,get user(){return user},get offlineUserId(){return offlineId},get storageSuffix(){return suffix(user?.id||offlineId)},suffix,friendly,openProfile,openAccount,get client(){return client}};
  window.miaoAuth.ready=initialize().then(()=>{if(problem)setTimeout(()=>window.miao?.toast(problem),1000);if(recovery&&user)setTimeout(()=>{if(window.miao)openPassword();},500);});
 })();

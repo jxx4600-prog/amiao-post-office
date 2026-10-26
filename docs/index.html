@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>阿喵事务局 · 把今天写成一封信</title><meta name="description" content="手绘猫咪陪你记录日常、安排待办、收藏信件。访客可本地记录；登录后查看账号保存状态。"><meta name="theme-color" content="#fffde9"><link rel="stylesheet" href="site.css?v=20261026-1"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>阿喵事务局 · 把今天写成一封信</title><meta name="description" content="手绘猫咪陪你记录日常、安排待办、收藏信件。访客可本地记录；登录后查看账号保存状态。"><meta name="theme-color" content="#fffde9"><link rel="stylesheet" href="site.css?v=20261026-2"></head>
 <body>
 <main id="app" aria-label="阿喵事务局">
- <div id="view"></div>
+ <div id="view"><section class="startup-state" role="status"><h1>阿喵事务局</h1><p>正在打开邮局…</p><p data-startup-detail>正在读取本机记录和账号状态。</p><a data-startup-retry href="?v=20261026-2" hidden>重新加载</a><noscript>请启用浏览器的 JavaScript 后重新打开。</noscript></section></div>
  <nav id="navigation" aria-label="主要功能">
   <button data-page="home" title="主页"><img class="nav-art" src="assets/home-parts/nav-0.webp" alt="" aria-hidden="true"><span class="nav-caption">主页</span></button>
   <button data-page="clock" title="闹钟"><img class="nav-art" src="assets/home-parts/nav-1.webp" alt="" aria-hidden="true"><span class="nav-caption">时钟</span></button>
@@ -27,7 +27,8 @@
 
 
 
-<script defer src="site.js?v=20261026-1"></script>
+<script src="startup.js?v=20261026-2"></script>
+<script defer src="site.js?v=20261026-2"></script>
 
 
 

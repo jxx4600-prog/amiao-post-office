@@ -4,7 +4,8 @@
  let pageAnimation=null,dialogAnimation=null,navAnimation=null;
  document.documentElement.classList.add('ui-motion-ready');
  function stop(){pageAnimation?.cancel();dialogAnimation?.cancel();navAnimation?.cancel();}
- reduced.addEventListener('change',()=>{if(reduced.matches)stop();});
+ const changed=()=>{if(reduced.matches)stop();};
+ if(reduced.addEventListener)reduced.addEventListener('change',changed);else reduced.addListener?.(changed);
  window.addEventListener('miao:navigate',({detail:{from,to}})=>{
   stop();if(reduced.matches||!from||from===to)return;
   const stage=document.querySelector('#view>section');if(!stage?.animate)return;

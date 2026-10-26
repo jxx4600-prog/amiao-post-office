@@ -6,6 +6,7 @@
  function persistMeta(){if(!metaKey)return;try{localStorage.setItem(metaKey,JSON.stringify(meta));}catch{}}
  function setStatus(text){status=text;document.querySelectorAll('[data-cloud-status]').forEach(el=>el.textContent=status);}
  function readCache(){try{return localStorage.getItem(key)||'';}catch{return '';}}
+ function deadline(work,ms=5000){let timer;return Promise.race([work,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('cloud_startup_timeout')),ms);})]).finally(()=>clearTimeout(timer));}
  function fail(error){
   if(error?.code==='40001'||String(error?.message).includes('amiao_revision_conflict')){conflict=true;setStatus('账号有更新 · 需要处理版本冲突');return;}
   if(['PGRST205','PGRST202','42P01','42883','42501'].includes(error?.code)){blocked=true;setStatus(cacheAvailable?'账号存储尚未就绪 · 已在当前浏览器保存':'账号存储未就绪且本机缓存不足 · 请立即导出备份');return;}
@@ -18,12 +19,14 @@
  }
  async function initialize(){
   await window.miaoAuth.ready;user=window.miaoAuth.user;client=window.miaoAuth.client;
-  if(!user||!client)return;
-  key='miao-refined-v1'+window.miaoAuth.storageSuffix;metaKey='amiao-cloud-meta-v1:'+user.id;
+  const offlineId=window.miaoAuth.offlineUserId;
+  if(!user&&!offlineId)return;
+  key='miao-refined-v1'+window.miaoAuth.storageSuffix;metaKey='amiao-cloud-meta-v1:'+(user?.id||offlineId);
   try{const saved=JSON.parse(localStorage.getItem(metaKey));if(saved&&Number.isSafeInteger(saved.revision)&&saved.revision>=0)meta=saved;}catch{}
+  if(!user||!client){setStatus('账号暂未连接 · 修改保存在当前浏览器');return;}
   pending=meta.dirty?readCache():'';setStatus('正在读取账号记录…');
   try{
-   const remote=await fetchRemote();remoteVersion=remote;
+   const remote=await deadline(fetchRemote());remoteVersion=remote;
    if(remote){
     if(meta.dirty&&pending&&Number(remote.revision)!==meta.revision){conflict=true;setStatus('账号有更新 · 需要处理版本冲突');return;}
     if(!meta.dirty){initialSnapshot=remote.payload;const json=JSON.stringify(remote.payload);try{localStorage.setItem(key,json);}catch{cacheAvailable=false;}ack=json;}
@@ -33,9 +36,10 @@
   }catch(error){fail(error);}
  }
  function queue(json,options={}){
-  if(reloading||!user||new URLSearchParams(location.search).get('qa')==='1')return;
+  if(reloading||(!user&&!window.miaoAuth?.offlineUserId)||new URLSearchParams(location.search).get('qa')==='1')return;
   if(json===ack&&!meta.dirty)return;
   cacheAvailable=options.cached!==false;pending=json;meta.dirty=true;persistMeta();
+  if(!user){setStatus(cacheAvailable?'账号暂未连接 · 修改保存在当前浏览器':'本机缓存不足 · 请立即导出备份');return;}
   if(!conflict&&!blocked)setStatus(cacheAvailable?'当前浏览器已保存 · 等待保存到账号':'本机缓存空间不足 · 正在准备账号保存，请勿关闭');
   clearTimeout(timer);if(!conflict&&!blocked)timer=setTimeout(flush,1200);
  }

@@ -1,4 +1,6 @@
 /* One transition owns page entry; geometry stays unchanged for the editor. */
+.startup-state{min-height:240px;padding:48px 24px;text-align:center;display:grid;align-content:center;justify-items:center;gap:12px;color:var(--ink)}
+.startup-state h1{font-size:26px;font-weight:400}.startup-state p{font-size:15px;line-height:1.7;margin:0}.startup-state a{padding:10px 18px;border:1px solid var(--ink);border-radius:5px;color:inherit}
 .ui-motion-ready #view>section,.ui-motion-ready #modal[open]{animation:none}
 #view{overflow-x:hidden}
 .editor{min-height:0}
