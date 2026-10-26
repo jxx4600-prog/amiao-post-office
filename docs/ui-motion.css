@@ -1,0 +1,23 @@
+/* One transition owns page entry; geometry stays unchanged for the editor. */
+.ui-motion-ready #view>section,.ui-motion-ready #modal[open]{animation:none}
+#view{overflow-x:hidden}
+.editor{min-height:0}
+.editor .paper-scroll{min-height:80px}
+.editor .editor-footer{flex-shrink:0;font-size:12px;gap:8px;padding:7px 16px}
+.editor .editor-footer [data-cloud-status]{min-width:0;text-align:right;overflow-wrap:anywhere}
+@media(max-height:500px){
+ .editor .record-date{padding:4px 12px}
+ .editor .editor-footer{padding:4px 12px;font-size:11px}
+}
+@media(prefers-reduced-motion:no-preference){
+ #app button:not(.sticker):not(.layer-move):not(.layer-resize):not(.layer-delete):not(.crop-handle):not(.crop-corner){transition:transform 120ms ease-out,background-color 160ms ease-out}
+ #app button:not(:disabled):not(.sticker):not(.layer-move):not(.layer-resize):not(.layer-delete):not(.crop-handle):not(.crop-corner):active{transform:scale(.97)}
+ #navigation button:active{transform:scale(.95)}
+ #navigation button[aria-current=page] .nav-caption{color:#f7ddb0}
+ #navigation button:after{transition:opacity 160ms ease-out,width 180ms ease-out}
+}
+@media(prefers-reduced-motion:reduce){
+ .tap-paw{display:none!important}
+ #view>section,#modal[open],.letter{animation:none!important}
+ #app button{transition:none!important}
+}
